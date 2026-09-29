@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:./prisma/dev.db
+      - DEMO_MODE=true
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - HINDSIGHT_API_KEY=${HINDSIGHT_API_KEY:-}
+      - HINDSIGHT_BANK_ID=opshindsight-incidents
+    volumes:
+      - ./prisma:/app/prisma
