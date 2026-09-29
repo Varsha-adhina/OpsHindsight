@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      String   @default("engineer")
+  createdAt DateTime @default(now())
+}
+
+model Incident {
+  id                String   @id @default(cuid())
+  externalId        String   @unique
+  title             String
+  service           String
+  environment       String   @default("production")
+  severity          String
+  status            String   @default("active")
+  alertType         String?
+  errorSignature    String?
+  rawAlert          String?
+  normalizedContext String?
+  customerImpact    String?
+  startedAt         DateTime @default(now())
+  resolvedAt        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  events     IncidentEvent[]
+  analyses   IncidentAnalysis[]
+  resolution IncidentResolution?
+  memoryOps  MemoryOperation[]
+}
+
+model IncidentEvent {
+  id         String   @id @default(cuid())
+  incidentId String
+  timestamp  DateTime @default(now())
+  eventType  String
+  content    String
+  author     String?
+  result     String?
+  createdAt  DateTime @default(now())
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+}
+
+model IncidentAnalysis {
+  id          String   @id @default(cuid())
+  incidentId  String
+  summary     String
+  responseJson String
+  confidence  Float    @default(0)
+  memoryCount Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+}
+
+model IncidentResolution {
+  id                  String   @id @default(cuid())
+  incidentId          String   @unique
+  rootCause           String
+  contributingFactors String?
+  successfulSteps     String?
+  failedSteps         String?
+  runbook             String?
+  preventiveActions   String?
+  customerImpact      String?
+  feedback            String?
+  feedbackRating      String?
+  durationMinutes     Int?
+  createdAt           DateTime @default(now())
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+}
+
+model MemoryOperation {
+  id           String   @id @default(cuid())
+  incidentId   String?
+  operationType String
+  status       String
+  query        String?
+  resultCount  Int?
+  durationMs   Int?
+  summary      String?
+  createdAt    DateTime @default(now())
+
+  incident Incident? @relation(fields: [incidentId], references: [id], onDelete: SetNull)
+}
+
+model Runbook {
+  id                       String   @id @default(cuid())
+  name                     String   @unique
+  service                  String
+  description              String?
+  successCount             Int      @default(0)
+  failureCount             Int      @default(0)
+  averageResolutionMinutes Float?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+}
+
+model DemoMemory {
+  id        String   @id @default(cuid())
+  memoryId  String   @unique
+  content   String
+  service   String?
+  category  String?
+  metadata  String?
+  createdAt DateTime @default(now())
+}
